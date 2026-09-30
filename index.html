@@ -368,6 +368,24 @@
     .loading-msg { display: none; color: var(--subtext); font-size: 0.9rem; margin-top: 12px; }
     .loading-msg.show { display: flex; align-items: center; }
 
+    /* DROP ZONE */
+    #dropZone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+    }
+    #dropZone:hover, #dropZone.drag-over {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.05);
+    }
+    #dropZone #dropIcon { font-size: 2.2rem; margin-bottom: 8px; }
+    #dropZone #dropText { color: var(--text); font-size: 0.9rem; line-height: 1.6; }
+
     /* RULE TABLE */
     .rule-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 48px; }
     .rule-item {
@@ -485,9 +503,26 @@
         </div>
       </div>
 
+      <!-- FILE UPLOAD DROP ZONE -->
+      <div class="config-block" style="margin-bottom:12px;">
+        <label>Upload Config File</label>
+        <div id="dropZone" onclick="document.getElementById('fileInput').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleDrop(event)">
+          <div id="dropIcon">📂</div>
+          <div id="dropText">Drag &amp; drop your config file here<br><span style="color:var(--subtext);font-size:0.8rem;">or click to browse (.cfg .conf .txt)</span></div>
+          <div id="fileName" style="display:none;color:var(--accent2);font-size:0.85rem;margin-top:8px;font-family:monospace;"></div>
+        </div>
+        <input type="file" id="fileInput" accept=".cfg,.conf,.txt,.log,text/*" style="display:none" onchange="handleFileSelect(event)">
+      </div>
+
       <div class="config-block" style="margin-bottom:16px;">
-        <label>Device Configuration (paste here)</label>
-        <textarea id="configInput" placeholder="Paste Cisco IOS / Juniper JunOS / Fortinet config here, or click a sample above..."></textarea>
+        <label style="display:flex;align-items:center;gap:8px;">
+          <span>Or Paste Configuration Manually</span>
+          <span style="font-size:0.7rem;color:var(--subtext);background:var(--surface2);padding:2px 6px;border-radius:4px;">optional</span>
+        </label>
+        <textarea id="configInput" placeholder="Paste Cisco IOS / Juniper JunOS / Fortinet config here, or upload a file above..."></textarea>
       </div>
 
       <div class="loading-msg" id="loadingMsg">
@@ -608,6 +643,47 @@
 </footer>
 
 <script>
+// ─── FILE UPLOAD HANDLERS ────────────────────────────────────────────────────
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) loadFile(file);
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = event.dataTransfer.files[0];
+  if (file) loadFile(file);
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    document.getElementById('configInput').value = content;
+
+    // Update drop zone UI
+    document.getElementById('dropIcon').textContent = '✅';
+    document.getElementById('dropText').innerHTML =
+      `<strong style="color:var(--accent2)">${file.name}</strong><br>
+       <span style="color:var(--subtext);font-size:0.78rem;">${(file.size/1024).toFixed(1)} KB — click to change</span>`;
+    document.getElementById('fileName').style.display = 'none';
+
+    // Auto-detect vendor from filename hint
+    const name = file.name.toLowerCase();
+    if (name.includes('cisco') || name.includes('ios')) {
+      document.getElementById('vendor').value = 'cisco';
+    } else if (name.includes('juniper') || name.includes('junos')) {
+      document.getElementById('vendor').value = 'juniper';
+    } else if (name.includes('forti') || name.includes('fortinet')) {
+      document.getElementById('vendor').value = 'fortinet';
+    } else {
+      document.getElementById('vendor').value = 'auto';
+    }
+  };
+  reader.readAsText(file);
+}
+
 // ─── SAMPLES ────────────────────────────────────────────────────────────────
 const samples = {
   cisco: `hostname cisco-router-01
