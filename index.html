@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Driven Network Security Compliance Auditor</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --warn: #d29922;
+      --danger: #f85149;
+      --critical: #ff4444;
+      --text: #c9d1d9;
+      --subtext: #8b949e;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    nav .logo span { color: var(--text); font-weight: 400; }
+    nav .badge {
+      background: var(--accent2);
+      color: #000;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    nav .spacer { flex: 1; }
+    nav .navlink {
+      color: var(--subtext);
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    nav .navlink:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2045 100%);
+      padding: 72px 40px 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+      background: linear-gradient(90deg, #58a6ff, #79c0ff, #a5d6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      color: var(--subtext);
+      max-width: 600px;
+      margin: 0 auto 32px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+    .hero .cta {
+      display: inline-block;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      font-size: 1rem;
+      margin-right: 12px;
+      transition: opacity 0.2s;
+    }
+    .hero .cta:hover { opacity: 0.85; }
+    .hero .cta.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .section-title span { color: var(--accent); }
+
+    /* CARDS GRID */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card .icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .card h3 { font-size: 1rem; margin-bottom: 6px; }
+    .card p { color: var(--subtext); font-size: 0.85rem; line-height: 1.5; }
+
+    /* AUDIT PANEL */
+    .audit-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 48px;
+      overflow: hidden;
+    }
+    .audit-panel .panel-header {
+      background: var(--surface2);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .audit-panel .panel-header h2 { font-size: 1.05rem; flex: 1; }
+    .btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-success { background: var(--accent2); color: #000; }
+    .btn-warn { background: var(--warn); color: #000; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+    .panel-body { padding: 24px; }
+
+    /* CONFIG TEXTAREA */
+    .config-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media(max-width: 700px) { .config-area { grid-template-columns: 1fr; } }
+
+    .config-block label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--subtext);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .config-block select, .config-block textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      font-family: 'Consolas', monospace;
+      resize: vertical;
+    }
+    .config-block select { resize: none; font-family: inherit; }
+    .config-block textarea { min-height: 180px; }
+    .config-block select:focus, .config-block textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .sample-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+    /* RESULTS */
+    #results { display: none; }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .score-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .score-card .val {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .score-card .label { font-size: 0.75rem; color: var(--subtext); text-transform: uppercase; }
+    .green { color: var(--accent2); }
+    .yellow { color: var(--warn); }
+    .red { color: var(--danger); }
+    .blue { color: var(--accent); }
+
+    .findings-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .findings-table th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--subtext);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .findings-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .findings-table tr:last-child td { border-bottom: none; }
+    .findings-table tr:hover td { background: rgba(88,166,255,0.05); }
+
+    .sev {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .sev-critical { background: rgba(255,68,68,0.15); color: var(--critical); }
+    .sev-high { background: rgba(248,81,73,0.15); color: var(--danger); }
+    .sev-medium { background: rgba(210,153,34,0.15); color: var(--warn); }
+    .sev-low { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .sev-info { background: rgba(139,148,158,0.15); color: var(--subtext); }
+
+    /* OUTPUT TABS */
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab {
+      padding: 6px 14px;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: var(--bg);
+      color: var(--subtext);
+    }
+    .tab.active { background: var(--surface2); color: var(--text); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    pre.output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 0.8rem;
+      font-family: 'Consolas', monospace;
+      color: var(--accent2);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* PROGRESS */
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin: 8px 0 4px;
+      overflow: hidden;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    /* ARCHITECTURE SECTION */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .arch-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .arch-box .title { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+    .arch-box .desc { font-size: 0.78rem; color: var(--subtext); }
+    .arrow { text-align: center; font-size: 1.4rem; color: var(--border); padding: 4px 0; }
+
+    /* FOOTER */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 24px;
+      color: var(--subtext);
+      font-size: 0.82rem;
+    }
+
+    /* SPINNER */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-msg { display: none; color: var(--subtext); font-size: 0.9rem; margin-top: 12px; }
+    .loading-msg.show { display: flex; align-items: center; }
+
+    /* RULE TABLE */
+    .rule-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 48px; }
+    .rule-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .rule-item .rule-id {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      min-width: 130px;
+    }
+    .rule-item .rule-title { font-size: 0.9rem; flex: 1; }
+    .rule-item .rule-cat { font-size: 0.75rem; color: var(--subtext); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">🛡 NetAudit <span>Pro</span></div>
+  <span class="badge">v1.0 PROTOTYPE</span>
+  <div class="spacer"></div>
+  <a class="navlink" onclick="scrollTo('#auditor')">Auditor</a>
+  &nbsp;&nbsp;
+  <a class="navlink" onclick="scrollTo('#rules')">Rules</a>
+  &nbsp;&nbsp;
+  <a class="navlink" onclick="scrollTo('#architecture')">Architecture</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>AI-Driven Multi-Vendor<br>Network Security Compliance Auditor</h1>
+  <p>Paste any Cisco IOS, Juniper JunOS, or Fortinet FortiOS configuration below and get a real-time compliance report with findings, severity scores, and remediation advice.</p>
+  <button class="cta" onclick="scrollTo('#auditor')">▶ Try the Live Demo</button>
+  <button class="cta secondary" onclick="scrollTo('#architecture')">View Architecture</button>
+</div>
+
+<main>
+
+  <!-- FEATURE CARDS -->
+  <div class="section-title"><span>Features</span></div>
+  <div class="cards">
+    <div class="card">
+      <div class="icon">🔍</div>
+      <h3>Auto Vendor Detection</h3>
+      <p>Automatically detects Cisco IOS, Juniper JunOS and Fortinet FortiOS from the config syntax.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📋</div>
+      <h3>Rule Engine</h3>
+      <p>Evaluates 10+ security rules covering authentication, insecure protocols, ACLs, SNMP, logging and more.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📊</div>
+      <h3>Compliance Score</h3>
+      <p>Generates a 0–100 compliance score and CVSS-equivalent risk index for every audited device.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📄</div>
+      <h3>Multi-Format Reports</h3>
+      <p>Exports findings as human-readable text, structured CSV, or JSON for SIEM ingestion.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🌐</div>
+      <h3>Fleet-Wide Summary</h3>
+      <p>Aggregates results across all devices and highlights the most critical fleet-wide gaps.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🛠</div>
+      <h3>Remediation Guidance</h3>
+      <p>Each finding includes a concrete remediation command snippet you can paste straight into your device.</p>
+    </div>
+  </div>
+
+  <!-- LIVE AUDITOR -->
+  <div id="auditor" class="audit-panel">
+    <div class="panel-header">
+      <h2>⚡ Live Configuration Auditor</h2>
+      <button class="btn btn-primary" onclick="runAudit()">▶ Run Audit</button>
+      <button class="btn btn-sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="clearAll()">✕ Clear</button>
+    </div>
+    <div class="panel-body">
+
+      <div class="sample-btns">
+        <strong style="font-size:0.82rem;color:var(--subtext);align-self:center;">Load sample:</strong>
+        <button class="btn btn-sm btn-primary" onclick="loadSample('cisco')">🔵 Cisco IOS</button>
+        <button class="btn btn-sm btn-warn" onclick="loadSample('juniper')">🟠 Juniper JunOS</button>
+        <button class="btn btn-sm btn-success" onclick="loadSample('fortinet')">🟢 Fortinet FortiOS</button>
+      </div>
+
+      <div class="config-area">
+        <div class="config-block">
+          <label>Vendor</label>
+          <select id="vendor">
+            <option value="auto">Auto-Detect</option>
+            <option value="cisco">Cisco IOS</option>
+            <option value="juniper">Juniper JunOS</option>
+            <option value="fortinet">Fortinet FortiOS</option>
+          </select>
+        </div>
+        <div class="config-block">
+          <label>Output Format</label>
+          <select id="format">
+            <option value="all">All (Text + CSV + JSON)</option>
+            <option value="text">Text Report</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="config-block" style="margin-bottom:16px;">
+        <label>Device Configuration (paste here)</label>
+        <textarea id="configInput" placeholder="Paste Cisco IOS / Juniper JunOS / Fortinet config here, or click a sample above..."></textarea>
+      </div>
+
+      <div class="loading-msg" id="loadingMsg">
+        <span class="spinner"></span> Parsing configuration and evaluating rules…
+      </div>
+
+      <!-- RESULTS -->
+      <div id="results">
+        <hr style="border-color:var(--border);margin:24px 0;">
+
+        <h3 style="margin-bottom:16px;font-size:1.1rem;">📊 Audit Results — <span id="deviceName" style="color:var(--accent)"></span></h3>
+
+        <!-- SCORE ROW -->
+        <div class="score-row">
+          <div class="score-card">
+            <div class="val" id="scoreVal">—</div>
+            <div class="label">Compliance Score</div>
+            <div class="progress-bar"><div class="fill" id="scoreFill" style="width:0%;background:var(--accent2);"></div></div>
+          </div>
+          <div class="score-card">
+            <div class="val" id="riskVal">—</div>
+            <div class="label">Risk Index (/ 10)</div>
+          </div>
+          <div class="score-card">
+            <div class="val" id="findingsVal">—</div>
+            <div class="label">Total Findings</div>
+          </div>
+          <div class="score-card">
+            <div class="val" id="criticalVal">—</div>
+            <div class="label">Critical / High</div>
+          </div>
+          <div class="score-card">
+            <div class="val" id="ratingVal">—</div>
+            <div class="label">Security Posture</div>
+          </div>
+        </div>
+
+        <!-- FINDINGS TABLE -->
+        <h4 style="margin-bottom:12px;color:var(--subtext);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;">Findings</h4>
+        <div style="overflow-x:auto;margin-bottom:28px;">
+          <table class="findings-table">
+            <thead>
+              <tr>
+                <th>Rule ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Remediation</th>
+              </tr>
+            </thead>
+            <tbody id="findingsBody"></tbody>
+          </table>
+        </div>
+
+        <!-- OUTPUT TABS -->
+        <h4 style="margin-bottom:12px;color:var(--subtext);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;">Report Output</h4>
+        <div class="tabs">
+          <div class="tab active" onclick="showTab('text')">📄 Text</div>
+          <div class="tab" onclick="showTab('csv')">📊 CSV</div>
+          <div class="tab" onclick="showTab('json')">🔧 JSON</div>
+        </div>
+        <div id="tab-text" class="tab-content active"><pre class="output" id="textOut"></pre></div>
+        <div id="tab-csv"  class="tab-content"><pre class="output" id="csvOut"></pre></div>
+        <div id="tab-json" class="tab-content"><pre class="output" id="jsonOut"></pre></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-success" onclick="downloadReport('text')">⬇ Download .txt</button>
+          <button class="btn btn-sm btn-primary" onclick="downloadReport('csv')">⬇ Download .csv</button>
+          <button class="btn btn-sm btn-warn" onclick="downloadReport('json')">⬇ Download .json</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RULES -->
+  <div id="rules">
+    <div class="section-title"><span>Security Rules</span> — Active Rule Set</div>
+    <ul class="rule-list" id="ruleList"></ul>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div id="architecture">
+    <div class="section-title"><span>Architecture</span></div>
+    <div class="arch-grid">
+      <div class="arch-box">
+        <div class="title">CLI / Web UI</div>
+        <div class="desc">main.c / index.html — entry point, option parsing, file loading</div>
+      </div>
+      <div class="arch-box">
+        <div class="title">Parser Registry</div>
+        <div class="desc">parser_registry.c — auto-detect vendor, dispatch to correct parser</div>
+      </div>
+      <div class="arch-box">
+        <div class="title">Vendor Parsers</div>
+        <div class="desc">parser_cisco.c · parser_juniper.c · parser_fortinet.c</div>
+      </div>
+      <div class="arch-box">
+        <div class="title">Device Model</div>
+        <div class="desc">device_config_t — normalised, vendor-agnostic in-memory model</div>
+      </div>
+      <div class="arch-box">
+        <div class="title">Rule Engine</div>
+        <div class="desc">rule_engine.c — iterates rule_table[], calls eval callbacks, collects findings</div>
+      </div>
+      <div class="arch-box">
+        <div class="title">Report Generator</div>
+        <div class="desc">text_reporter · csv_reporter · json_reporter — multi-format output</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  NetAudit Pro — AI-Driven Multi-Vendor Network Security Compliance Auditor &nbsp;|&nbsp; Prototype v1.0
+</footer>
+
+<script>
+// ─── SAMPLES ────────────────────────────────────────────────────────────────
+const samples = {
+  cisco: `hostname cisco-router-01
+version 15.4
+!
+enable password cisco123
+no enable secret
+!
+no service password-encryption
+!
+aaa new-model
+aaa authentication login default local
+!
+line vty 0 4
+ transport input telnet ssh
+ exec-timeout 5 0
+!
+line con 0
+ exec-timeout 5 0
+!
+interface GigabitEthernet0/0
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+!
+interface GigabitEthernet0/1
+ ip address 10.0.0.1 255.255.255.0
+ ip access-group MGMT_ACL in
+ no shutdown
+!
+ip access-list extended MGMT_ACL
+ permit ip any any
+!
+snmp-server community public RO
+snmp-server community private RW
+!
+ip http server
+no ip http secure-server
+!
+no logging on
+!
+cdp run
+ip proxy-arp
+!
+banner motd ^Authorized Access Only^
+!
+ntp server 1.1.1.1
+no ntp authenticate`,
+
+  juniper: `system {
+    host-name juniper-fw-01;
+    root-authentication {
+        plain-text-password-value "juniper123";
+    }
+    services {
+        ssh {
+            protocol-version v2;
+        }
+        telnet;
+        web-management {
+            http;
+        }
+    }
+    syslog {
+        file messages {
+            any any;
+        }
+    }
+}
+interfaces {
+    ge-0/0/0 {
+        unit 0 {
+            family inet {
+                address 10.0.0.1/24;
+            }
+        }
+    }
+}
+snmp {
+    community public {
+        authorization read-only;
+    }
+    community private {
+        authorization read-write;
+    }
+}
+security {
+    policies {
+        from-zone trust to-zone untrust {
+            policy allow-all {
+                match {
+                    source-address any;
+                    destination-address any;
+                    application any;
+                }
+                then {
+                    permit;
+                }
+            }
+        }
+    }
+}`,
+
+  fortinet: `config system global
+    set hostname fortinet-fw-01
+    set admin-timeout 30
+    set strong-crypto disable
+end
+config system admin
+    edit "admin"
+        set password "admin123"
+        set accprofile "super_admin"
+    next
+end
+config system interface
+    edit "wan1"
+        set ip 203.0.113.1 255.255.255.0
+        set allowaccess https http ssh telnet
+    next
+    edit "lan"
+        set ip 192.168.1.1 255.255.255.0
+        set allowaccess https ping
+    next
+end
+config system snmp community
+    edit 1
+        set name "public"
+        set status enable
+    next
+end
+config log syslogd setting
+    set status disable
+end
+config firewall policy
+    edit 1
+        set srcintf "lan"
+        set dstintf "wan1"
+        set srcaddr "all"
+        set dstaddr "all"
+        set action accept
+        set service "ALL"
+        set schedule "always"
+    next
+end`
+};
+
+// ─── RULES ──────────────────────────────────────────────────────────────────
+const RULES = [
+  { id:"NETAUD-AUTH-001", title:"Plaintext Enable Password Configured", sev:"CRITICAL", cat:"Authentication",
+    check: c => !c.enableSecret && c.enablePassword,
+    desc:"Device uses 'enable password' instead of 'enable secret'. The password is stored in reversible format.",
+    fix:"Replace with: enable secret <strong-password>" },
+  { id:"NETAUD-AUTH-002", title:"No Password Encryption Service", sev:"HIGH", cat:"Authentication",
+    check: c => !c.servicePasswordEncryption,
+    desc:"Service password-encryption is disabled. Passwords may appear in plaintext in config exports.",
+    fix:"Add: service password-encryption" },
+  { id:"NETAUD-AUTH-003", title:"Weak or Default Admin Password Detected", sev:"CRITICAL", cat:"Authentication",
+    check: c => c.weakPassword,
+    desc:"The device appears to use a default or trivially weak administrator password.",
+    fix:"Set a strong password with at least 12 characters including upper, lower, digit and special characters." },
+  { id:"NETAUD-PROTO-001", title:"Telnet Enabled on VTY Lines", sev:"HIGH", cat:"Insecure Protocols",
+    check: c => c.telnetEnabled,
+    desc:"Telnet transmits credentials and data in cleartext making it trivially interceptable.",
+    fix:"line vty 0 4 \\n transport input ssh" },
+  { id:"NETAUD-PROTO-002", title:"HTTP Server Enabled (no HTTPS)", sev:"MEDIUM", cat:"Insecure Protocols",
+    check: c => c.httpEnabled && !c.httpsEnabled,
+    desc:"Plain HTTP management interface active. Traffic is unencrypted.",
+    fix:"no ip http server \\n ip http secure-server" },
+  { id:"NETAUD-ACL-001", title:"Permit Any-Any ACL Rule Detected", sev:"HIGH", cat:"Access Control",
+    check: c => c.permitAnyAny,
+    desc:"An ACL rule permits all source IPs to all destination IPs, effectively bypassing access controls.",
+    fix:"Replace with granular permit rules. Remove: permit ip any any" },
+  { id:"NETAUD-SNMP-001", title:"Default SNMP Community String in Use", sev:"HIGH", cat:"SNMP",
+    check: c => c.defaultSnmpCommunity,
+    desc:"Default SNMP community strings 'public' or 'private' are widely known and exploitable.",
+    fix:"snmp-server community <strong-community> RO \\n no snmp-server community public" },
+  { id:"NETAUD-SNMP-002", title:"SNMP Write Community (RW) Configured", sev:"MEDIUM", cat:"SNMP",
+    check: c => c.snmpRW,
+    desc:"An SNMP Read-Write community is configured, allowing full device configuration via SNMP.",
+    fix:"Remove RW communities or restrict with ACL: snmp-server community <name> RO <acl>" },
+  { id:"NETAUD-LOG-001", title:"Syslog / Logging Disabled", sev:"MEDIUM", cat:"Logging",
+    check: c => !c.loggingEnabled,
+    desc:"Centralized logging is disabled. Security events will not be captured for audit or forensics.",
+    fix:"logging on \\n logging host <syslog-server-ip>" },
+  { id:"NETAUD-MGMT-001", title:"No Exec-Timeout on Console/VTY", sev:"LOW", cat:"Management",
+    check: c => !c.execTimeout,
+    desc:"No idle session timeout configured. An unattended privileged session may be exploited.",
+    fix:"line vty 0 4 \\n exec-timeout 5 0" },
+  { id:"NETAUD-DISC-001", title:"CDP / LLDP Discovery Protocols Enabled", sev:"LOW", cat:"Discovery",
+    check: c => c.cdpEnabled,
+    desc:"Discovery protocols broadcast device type, software version and interface details to all neighbours.",
+    fix:"no cdp run" },
+  { id:"NETAUD-HARDEN-001", title:"Strong Crypto Disabled", sev:"HIGH", cat:"Hardening",
+    check: c => c.strongCryptoDisabled,
+    desc:"Strong cryptography is explicitly disabled, allowing weak ciphers to be negotiated.",
+    fix:"config system global \\n set strong-crypto enable \\n end" }
+];
+
+// ─── PARSER ─────────────────────────────────────────────────────────────────
+function parseConfig(text, vendorHint) {
+  const t = text.toLowerCase();
+  let vendor = vendorHint;
+  if (vendor === 'auto') {
+    if (t.includes('set system host-name') || t.includes('root-authentication') || t.includes('junos')) vendor = 'juniper';
+    else if (t.includes('config system global') || t.includes('set hostname') && t.includes('set admin-timeout')) vendor = 'fortinet';
+    else vendor = 'cisco';
+  }
+
+  const cfg = {
+    vendor,
+    hostname: 'unknown-device',
+    enableSecret: false,
+    enablePassword: false,
+    servicePasswordEncryption: false,
+    weakPassword: false,
+    telnetEnabled: false,
+    httpEnabled: false,
+    httpsEnabled: false,
+    permitAnyAny: false,
+    defaultSnmpCommunity: false,
+    snmpRW: false,
+    loggingEnabled: true,
+    execTimeout: false,
+    cdpEnabled: false,
+    strongCryptoDisabled: false,
+  };
+
+  const lines = text.split('\n').map(l => l.trim());
+
+  if (vendor === 'cisco') {
+    for (const l of lines) {
+      const ll = l.toLowerCase();
+      if (ll.startsWith('hostname ')) cfg.hostname = l.split(' ')[1] || 'cisco-device';
+      if (ll.startsWith('enable secret')) cfg.enableSecret = true;
+      if (ll.startsWith('enable password')) { cfg.enablePassword = true; const pw = l.split(' ').slice(2).join(' '); if (pw && pw.length < 8) cfg.weakPassword = true; }
+      if (ll === 'service password-encryption') cfg.servicePasswordEncryption = true;
+      if (ll.includes('transport input') && ll.includes('telnet')) cfg.telnetEnabled = true;
+      if (ll.startsWith('ip http server')) cfg.httpEnabled = true;
+      if (ll.startsWith('ip http secure-server')) cfg.httpsEnabled = true;
+      if (ll.includes('permit ip any any') || ll.includes('permit any any')) cfg.permitAnyAny = true;
+      if (ll.match(/snmp-server community (public|private)/)) cfg.defaultSnmpCommunity = true;
+      if (ll.match(/snmp-server community .* rw/)) cfg.snmpRW = true;
+      if (ll === 'no logging on' || ll === 'logging off') cfg.loggingEnabled = false;
+      if (ll.startsWith('exec-timeout')) cfg.execTimeout = true;
+      if (ll === 'cdp run') cfg.cdpEnabled = true;
+    }
+    if (!cfg.enableSecret) cfg.enableSecret = false;
+    if (!cfg.execTimeout) cfg.execTimeout = false;
+  } else if (vendor === 'juniper') {
+    for (const l of lines) {
+      const ll = l.toLowerCase().trim();
+      if (ll.includes('host-name ')) cfg.hostname = l.trim().replace('host-name','').replace(';','').trim();
+      if (ll.includes('plain-text-password')) cfg.weakPassword = true;
+      if (ll.includes('telnet;') || ll === 'telnet;') cfg.telnetEnabled = true;
+      if (ll.includes('http;') && !ll.includes('https')) cfg.httpEnabled = true;
+      if (ll.includes('https;')) cfg.httpsEnabled = true;
+      if (ll.includes('community public')) cfg.defaultSnmpCommunity = true;
+      if (ll.includes('community private')) { cfg.defaultSnmpCommunity = true; cfg.snmpRW = true; }
+      if (ll.includes('read-write')) cfg.snmpRW = true;
+      if (ll.includes('source-address any') && ll.includes('destination-address any')) cfg.permitAnyAny = true;
+      if (!ll.includes('syslog')) cfg.loggingEnabled = true;
+      cfg.execTimeout = true;
+      cfg.servicePasswordEncryption = true;
+    }
+  } else if (vendor === 'fortinet') {
+    for (const l of lines) {
+      const ll = l.toLowerCase().trim();
+      if (ll.startsWith('set hostname ')) cfg.hostname = l.trim().split(' ').slice(2).join(' ').replace(/"/g,'');
+      if (ll === 'set strong-crypto disable') cfg.strongCryptoDisabled = true;
+      if (ll.includes('allowaccess') && ll.includes('telnet')) cfg.telnetEnabled = true;
+      if (ll.includes('allowaccess') && ll.includes('http')) cfg.httpEnabled = true;
+      if (ll.includes('allowaccess') && ll.includes('https')) cfg.httpsEnabled = true;
+      if (ll.includes('set name "public"') || ll.includes("set name 'public'")) cfg.defaultSnmpCommunity = true;
+      if (ll.includes('set status disable') && ll.includes('syslog')) cfg.loggingEnabled = false;
+      if (ll.includes('set password') && (ll.includes('admin123') || ll.includes('password'))) cfg.weakPassword = true;
+      if (ll.includes('set srcaddr "all"') && ll.includes('set dstaddr "all"')) cfg.permitAnyAny = true;
+      cfg.servicePasswordEncryption = true;
+    }
+    // check logging separately
+    if (text.toLowerCase().includes('set status disable') && text.toLowerCase().includes('syslogd')) cfg.loggingEnabled = false;
+  }
+
+  return cfg;
+}
+
+// ─── AUDIT ENGINE ────────────────────────────────────────────────────────────
+function runEngine(cfg) {
+  return RULES.filter(r => r.check(cfg)).map(r => ({
+    id: r.id, title: r.title, sev: r.sev, cat: r.cat, desc: r.desc, fix: r.fix
+  }));
+}
+
+function calcScore(findings) {
+  const weights = { CRITICAL:30, HIGH:15, MEDIUM:8, LOW:3 };
+  let penalty = 0;
+  for (const f of findings) penalty += (weights[f.sev] || 0);
+  const score = Math.max(0, 100 - penalty);
+  const risk = parseFloat(Math.min(10, (penalty / 10)).toFixed(1));
+  return { score, risk };
+}
+
+function getRating(score) {
+  if (score >= 90) return ['EXCELLENT', 'green'];
+  if (score >= 75) return ['GOOD', 'green'];
+  if (score >= 55) return ['FAIR', 'yellow'];
+  if (score >= 35) return ['POOR', 'red'];
+  return ['CRITICAL', 'red'];
+}
+
+// ─── REPORT GENERATORS ───────────────────────────────────────────────────────
+function genText(cfg, findings, score, risk) {
+  const now = new Date().toISOString();
+  const [rating] = getRating(score);
+  const critHigh = findings.filter(f=>f.sev==='CRITICAL'||f.sev==='HIGH').length;
+  let out = `===============================================================================
+  NETWORK SECURITY COMPLIANCE AUDIT REPORT
+  Device: ${cfg.hostname}  |  Vendor: ${cfg.vendor.toUpperCase()}
+  Generated: ${now}
+===============================================================================
+
+--- [EXECUTIVE SCORECARD] -----------------------------------------------------
+  Overall Compliance Score:  ${score.toFixed(1)} / 100.0
+  Heuristic Risk Index:      ${risk} / 10.0
+  Security Posture Rating:   [${rating}]
+  Rules Evaluated:           ${RULES.length}
+  Total Violations Found:    ${findings.length}
+  Critical / High:           ${critHigh}
+
+--- [FINDINGS] ----------------------------------------------------------------\n`;
+
+  if (findings.length === 0) {
+    out += '  No violations found.\n';
+  } else {
+    for (const f of findings) {
+      out += `
+  [${f.sev.padEnd(8)}] ${f.id}
+  Title:       ${f.title}
+  Category:    ${f.cat}
+  Description: ${f.desc}
+  Remediation: ${f.fix.replace(/<[^>]+>/g,'')}\n`;
+    }
+  }
+
+  out += `\n===============================================================================
+  END OF REPORT
+===============================================================================`;
+  return out;
+}
+
+function genCSV(cfg, findings) {
+  let csv = 'Rule ID,Title,Severity,Category,Description,Remediation\n';
+  for (const f of findings) {
+    const esc = v => `"${v.replace(/"/g,'""').replace(/<[^>]+>/g,'')}"`;
+    csv += [f.id, f.title, f.sev, f.cat, f.desc, f.fix].map(esc).join(',') + '\n';
+  }
+  return csv;
+}
+
+function genJSON(cfg, findings, score, risk) {
+  const [rating] = getRating(score);
+  return JSON.stringify({
+    device: cfg.hostname,
+    vendor: cfg.vendor,
+    generated: new Date().toISOString(),
+    compliance_score: parseFloat(score.toFixed(1)),
+    risk_index: risk,
+    rating,
+    rules_evaluated: RULES.length,
+    finding_count: findings.length,
+    findings: findings.map(f => ({
+      rule_id: f.id,
+      title: f.title,
+      severity: f.sev,
+      category: f.cat,
+      description: f.desc,
+      remediation: f.fix.replace(/<[^>]+>/g,'')
+    }))
+  }, null, 2);
+}
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+let lastReports = {};
+
+function loadSample(v) {
+  document.getElementById('configInput').value = samples[v];
+  document.getElementById('vendor').value = v;
+}
+
+function clearAll() {
+  document.getElementById('configInput').value = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loadingMsg').classList.remove('show');
+}
+
+function runAudit() {
+  const text = document.getElementById('configInput').value.trim();
+  if (!text) { alert('Please paste a device configuration first.'); return; }
+
+  document.getElementById('loadingMsg').classList.add('show');
+  document.getElementById('results').style.display = 'none';
+
+  setTimeout(() => {
+    const vendor = document.getElementById('vendor').value;
+    const cfg = parseConfig(text, vendor);
+    const findings = runEngine(cfg);
+    const { score, risk } = calcScore(findings);
+    const [rating, ratingClass] = getRating(score);
+    const critHigh = findings.filter(f=>f.sev==='CRITICAL'||f.sev==='HIGH').length;
+
+    document.getElementById('deviceName').textContent = cfg.hostname + ' (' + cfg.vendor.toUpperCase() + ')';
+    document.getElementById('scoreVal').textContent = score.toFixed(0) + '%';
+    document.getElementById('scoreVal').className = 'val ' + ratingClass;
+    document.getElementById('scoreFill').style.width = score + '%';
+    document.getElementById('scoreFill').style.background = score >= 75 ? 'var(--accent2)' : score >= 50 ? 'var(--warn)' : 'var(--danger)';
+    document.getElementById('riskVal').textContent = risk;
+    document.getElementById('riskVal').className = 'val ' + (risk >= 7 ? 'red' : risk >= 4 ? 'yellow' : 'green');
+    document.getElementById('findingsVal').textContent = findings.length;
+    document.getElementById('criticalVal').textContent = critHigh;
+    document.getElementById('criticalVal').className = 'val ' + (critHigh > 0 ? 'red' : 'green');
+    document.getElementById('ratingVal').textContent = rating;
+    document.getElementById('ratingVal').className = 'val ' + ratingClass;
+
+    // Findings table
+    const tbody = document.getElementById('findingsBody');
+    tbody.innerHTML = '';
+    if (findings.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--accent2);padding:24px;">✅ No violations found — device meets all evaluated rules.</td></tr>';
+    } else {
+      for (const f of findings) {
+        const sevClass = { CRITICAL:'sev-critical', HIGH:'sev-high', MEDIUM:'sev-medium', LOW:'sev-low', INFO:'sev-info' }[f.sev] || 'sev-info';
+        tbody.innerHTML += `<tr>
+          <td style="font-family:monospace;font-size:0.78rem;color:var(--accent)">${f.id}</td>
+          <td>${f.title}</td>
+          <td><span class="sev ${sevClass}">${f.sev}</span></td>
+          <td style="color:var(--subtext);font-size:0.82rem;">${f.cat}</td>
+          <td style="font-size:0.82rem;">${f.desc}</td>
+          <td style="font-size:0.78rem;font-family:monospace;color:var(--accent2);">${f.fix}</td>
+        </tr>`;
+      }
+    }
+
+    // Reports
+    lastReports.text = genText(cfg, findings, score, risk);
+    lastReports.csv  = genCSV(cfg, findings);
+    lastReports.json = genJSON(cfg, findings, score, risk);
+    lastReports.hostname = cfg.hostname;
+
+    document.getElementById('textOut').textContent = lastReports.text;
+    document.getElementById('csvOut').textContent  = lastReports.csv;
+    document.getElementById('jsonOut').textContent = lastReports.json;
+
+    document.getElementById('loadingMsg').classList.remove('show');
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior:'smooth' });
+  }, 600);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['text','csv','json'][i]===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function downloadReport(type) {
+  const ext = { text:'txt', csv:'csv', json:'json' }[type];
+  const content = lastReports[type] || '';
+  const blob = new Blob([content], { type:'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `audit_${lastReports.hostname || 'device'}_report.${ext}`;
+  a.click();
+}
+
+function scrollTo(id) {
+  document.querySelector(id).scrollIntoView({ behavior:'smooth' });
+}
+
+// ─── POPULATE RULES LIST ─────────────────────────────────────────────────────
+window.onload = () => {
+  const ul = document.getElementById('ruleList');
+  const sevColor = { CRITICAL:'red', HIGH:'red', MEDIUM:'yellow', LOW:'blue', INFO:'blue' };
+  for (const r of RULES) {
+    ul.innerHTML += `<li class="rule-item">
+      <span class="rule-id">${r.id}</span>
+      <span class="rule-title">${r.title}</span>
+      <span class="sev sev-${r.sev.toLowerCase()}">${r.sev}</span>
+      <span class="rule-cat">${r.cat}</span>
+    </li>`;
+  }
+};
+</script>
+</body>
+</html>
